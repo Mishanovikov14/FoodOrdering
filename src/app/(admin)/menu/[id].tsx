@@ -1,20 +1,31 @@
+import { useProduct } from "@/api/products";
+import RemoteImage from "@/components/RemoteImage";
+import Loader from "@/components/ui/Loader";
 import Colors from "@/constants/Colors";
 import { defaultPizzaImage } from "@/constants/constants";
-import products from "@assets/data/products";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Href, Link, Stack, useLocalSearchParams} from "expo-router";
+import { Href, Link, Stack, useLocalSearchParams } from "expo-router";
 import { Text, View, Image, StyleSheet, Pressable } from "react-native";
 
 export default function ProductDetailsScreen() {
-  const { id } = useLocalSearchParams();
+  const { id: idString } = useLocalSearchParams();
+  const id = parseFloat(typeof idString === "string" ? idString : idString[0]);
 
-  const product = products.find((el) => el.id.toString() === id);
+  const link = `/(admin)/menu/create?id=${id}` as Href;
+
+  const { data: product, error, isLoading } = useProduct(id);
 
   if (!product) {
     return <Text>Product not found</Text>;
   }
 
-  const link = `/(admin)/menu/create?id=${id}` as Href;
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <Text>Failed to fetch products</Text>;
+  }
 
   return (
     <View style={styles.container}>
@@ -38,8 +49,9 @@ export default function ProductDetailsScreen() {
         }}
       />
 
-      <Image
-        source={{ uri: product.image || defaultPizzaImage }}
+      <RemoteImage
+        path={product.image}
+        fallback={defaultPizzaImage}
         style={styles.image}
       />
 

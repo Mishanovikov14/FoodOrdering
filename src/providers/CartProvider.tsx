@@ -1,25 +1,35 @@
-import { CartItem, Product } from "@/constants/types";
+import { useInsertOrderItems } from "@/api/order-items";
+import { useInsertOrder } from "@/api/orders";
+import { CartItem, Tables } from "@/constants/types";
 import { randomUUID } from "expo-crypto";
+import { useRouter } from "expo-router";
 import { PropsWithChildren, createContext, useContext, useState } from "react";
 
 type CartType = {
   items: CartItem[];
-  onAddItem: (product: Product, size: CartItem["size"]) => void;
+  onAddItem: (product: Tables<"products">, size: CartItem["size"]) => void;
   onUpdateQuantity: (itemId: string, amount: -1 | 1) => void;
   total: number;
+  onCheckout: () => void;
 };
 
 const CartContext = createContext<CartType>({
   items: [],
   onAddItem: () => {},
   onUpdateQuantity: () => {},
-  total: 0
+  total: 0,
+  onCheckout: () => {},
 });
 
 export default function CartProvider({ children }: PropsWithChildren) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  function addItemHandler(product: Product, size: CartItem["size"]) {
+  const { mutate: insertOrder } = useInsertOrder();
+  const { mutate: insertOrderItems } = useInsertOrderItems();
+
+  const router = useRouter();
+
+  function addItemHandler(product: Tables<"products">, size: CartItem["size"]) {
     const existingItem = items.find(
       (item) => item.product === product && item.size === size
     );
@@ -51,7 +61,44 @@ export default function CartProvider({ children }: PropsWithChildren) {
     setItems(updatedItem);
   }
 
-  const total = items.reduce((sum, item) => sum += item.product.price * item.quantity, 0);
+  function clearCart() {
+    setItems([]);
+  }
+
+  function checkoutHandler() {
+    insertOrder(
+      {
+        total,
+      },
+      {
+        onSuccess: saveOrderItems,
+      }
+    );
+  }
+
+  function saveOrderItems(orderData: Tables<"orders">) {
+    const orderItems = items.map((cartItem) => ({
+      order_id: orderData.id,
+      product_id: cartItem.product_id,
+      quantity: cartItem.quantity,
+      size: cartItem.size,
+    }));
+
+    insertOrderItems(
+      orderItems,
+      {
+        onSuccess: () => {
+          clearCart();
+          router.push(`/(user)/orders/${orderData.id}`);
+        },
+      }
+    );
+  }
+
+  const total = items.reduce(
+    (sum, item) => (sum += item.product.price * item.quantity),
+    0
+  );
 
   return (
     <CartContext.Provider
@@ -59,7 +106,8 @@ export default function CartProvider({ children }: PropsWithChildren) {
         items,
         onAddItem: addItemHandler,
         onUpdateQuantity: updateQuantity,
-        total
+        total,
+        onCheckout: checkoutHandler,
       }}
     >
       {children}

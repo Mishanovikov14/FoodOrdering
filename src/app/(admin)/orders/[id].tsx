@@ -1,19 +1,32 @@
+import { useOrderDetails, useUpdateOrder } from "@/api/orders";
 import OrderItemListItem from "@/components/OrderItemListItem";
 import OrderListItem from "@/components/OrderListItem";
+import { Text } from "@/components/Themed";
+import Loader from "@/components/ui/Loader";
 import Colors from "@/constants/Colors";
 import { OrderStatusList } from "@/constants/types";
-import orders from "@assets/data/orders";
 import { Stack } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
-import { Text, FlatList, View, StyleSheet, Pressable } from "react-native";
+import { FlatList, View, StyleSheet, Pressable } from "react-native";
 
 export default function OrderDetailsScreen() {
-  const { id } = useLocalSearchParams();
+  const { id: idString } = useLocalSearchParams();
+  const id = parseFloat(typeof idString === "string" ? idString : idString[0]);
 
-  const order = orders.find((order) => order.id.toString() === id);
+  const {data: order, error, isLoading} = useOrderDetails(id);
 
-  if (!order) {
-    return <Text>Order not found</Text>;
+  const {mutate: updateOrder, isPending: isCurrentlyUpdating} = useUpdateOrder();
+
+  function statusUpdateHandler(status: string) {
+    updateOrder({id: id, updatedFields: {status}});
+  } 
+
+  if (isLoading || isCurrentlyUpdating) {
+    return <Loader />;
+  }
+
+  if (error || !order) {
+    return <Text>Failed to fetch</Text>;
   }
 
   return (
@@ -33,11 +46,11 @@ export default function OrderDetailsScreen() {
               {OrderStatusList.map((status) => (
                 <Pressable
                   key={status}
-                  onPress={() => console.warn("Update status")}
+                  onPress={() => statusUpdateHandler(status)}
                   style={[styles.status,  order.status === status && {backgroundColor: Colors.light.tint}]}
                 >
                   <Text
-                    style={[styles.statusText, order.status ===status && {color: "white"}]}
+                    style={[styles.statusText, order.status === status && {color: "white"}]}
                   >
                     {status}
                   </Text>

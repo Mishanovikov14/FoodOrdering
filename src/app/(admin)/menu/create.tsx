@@ -1,33 +1,103 @@
-import Button from "@/components/Button";
-import { StyleSheet, Text, TextInput, View, Image, Alert } from "react-native";
-import { useState } from "react";
+import Button from "@/components/ui/Button";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { useState, useEffect } from "react";
 import { defaultPizzaImage } from "@/constants/constants";
 import Colors from "@/constants/Colors";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useLocalSearchParams } from "expo-router";
+import * as FileSystem from "expo-file-system";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  useDeleteProduct,
+  useInsertProduct,
+  useProduct,
+  useUpdateProduct,
+} from "@/api/products";
+import Loader from "@/components/ui/Loader";
+import { randomUUID } from "expo-crypto";
+import { supabase } from "@/lib/supabase";
+import { decode } from "base64-arraybuffer";
+import RemoteImage from "@/components/RemoteImage";
 
 export default function CreateProductScreen() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [errors, setErrors] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const [image, setImage] = useState<string | null>(null);
 
-  const { id } = useLocalSearchParams();
-  const isUpdating = !!id;
+  const { id: idString } = useLocalSearchParams();
+  const id = parseFloat(
+    typeof idString === "string" ? idString : idString?.[0]
+  );
 
-  function createHandler() {
+  const isUpdating = !!idString;
+
+  const router = useRouter();
+
+  const { mutate: insertProduct, isPending: isCreating } = useInsertProduct();
+  const { mutate: updateProduct, isPending: isCurrentlyUpdating } = useUpdateProduct();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+
+  const { data: updatingProduct } = useProduct(id);
+
+  useEffect(() => {
+    if (updatingProduct) {
+      setName(updatingProduct.name);
+      setPrice(updatingProduct.price.toString());
+      setImage(updatingProduct.image);
+    }
+  }, [updatingProduct]);
+
+  if (isLoading || isCreating || isCurrentlyUpdating || isDeleting) {
+    return <Loader />;
+  }
+
+  async function createHandler() {
     if (validateInput()) {
-      console.warn("create product " + name + " " + price);
+      setIsLoading(true);
 
-      resetFields();
+      const imagePath = await uploadImage();
+
+      setIsLoading(false);
+
+      insertProduct(
+        { name, price: parseFloat(price), image: imagePath },
+        {
+          onSuccess: () => {
+            resetFields();
+            router.back();
+          },
+        }
+      );
     }
   }
 
-  function updateHandler() {
+  async function updateHandler() {
     if (validateInput()) {
-      console.warn("Update product " + name + " " + price);
+      setIsLoading(true);
 
-      resetFields();
+      const imagePath = await uploadImage();
+
+      setIsLoading(false);
+
+      updateProduct(
+        { id, name, price: parseFloat(price), image: imagePath },
+        {
+          onSuccess: () => {
+            resetFields();
+            router.back();
+          },
+        }
+      );
     }
   }
 
@@ -69,7 +139,11 @@ export default function CreateProductScreen() {
   }
 
   function onDelete() {
-    console.warn("Deleted");
+    deleteProduct(id, {
+      onSuccess: () => {
+        router.replace("/(admin)");
+      },
+    });
   }
 
   function deleteHandler() {
@@ -100,13 +174,32 @@ export default function CreateProductScreen() {
     }
   }
 
+  async function uploadImage() {
+    if (!image?.startsWith("file://")) {
+      return;
+    }
+
+    const base64 = await FileSystem.readAsStringAsync(image, {
+      encoding: "base64",
+    });
+    const filePath = `${randomUUID()}.png`;
+    const contentType = "image/png";
+    const { data, error } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, decode(base64), { contentType });
+    if (data) {
+      return data.path;
+    }
+  }
+
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{ title: isUpdating ? "Update Product" : "Create Product" }}
       />
-      <Image
-        source={{ uri: image || defaultPizzaImage }}
+      <RemoteImage
+        path={image}
+        fallback={defaultPizzaImage}
         style={styles.image}
       />
       <Text onPress={pickImage} style={styles.textButton}>

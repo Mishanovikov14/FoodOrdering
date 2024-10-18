@@ -1,12 +1,13 @@
 import { Image, Pressable, StyleSheet, Text } from "react-native";
 
 import Colors from "../constants/Colors";
-import { Product } from "../constants/types";
+import { Tables } from "../constants/types";
 import { Href, Link, useSegments } from "expo-router";
 import { defaultPizzaImage } from "@/constants/constants";
+import RemoteImage from "./RemoteImage";
 
 type ProductListItemProps = {
-  product: Product;
+  product: Tables<'products'>;
 };
 
 export default function ProductListItem({ product }: ProductListItemProps) {
@@ -16,8 +17,9 @@ export default function ProductListItem({ product }: ProductListItemProps) {
   return (
     <Link href={myLink} asChild>
       <Pressable style={styles.container}>
-        <Image
-          source={{ uri: product.image || defaultPizzaImage }}
+        <RemoteImage
+          path={product.image}
+          fallback={defaultPizzaImage}
           style={styles.image}
           resizeMode="contain"
         />
