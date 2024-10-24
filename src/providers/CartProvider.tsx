@@ -4,6 +4,7 @@ import { CartItem, Tables } from "@/constants/types";
 import { randomUUID } from "expo-crypto";
 import { useRouter } from "expo-router";
 import { PropsWithChildren, createContext, useContext, useState } from "react";
+import { initialisePaymentSheet, openPaymentSheet } from "@/lib/stripe";
 
 type CartType = {
   items: CartItem[];
@@ -65,7 +66,14 @@ export default function CartProvider({ children }: PropsWithChildren) {
     setItems([]);
   }
 
-  function checkoutHandler() {
+  async function checkoutHandler() {
+    // await initialisePaymentSheet(Math.floor(total * 100));
+    // const payed = await openPaymentSheet();
+
+    // if (!payed) {
+    //   return;
+    // }
+
     insertOrder(
       {
         total,
@@ -84,15 +92,12 @@ export default function CartProvider({ children }: PropsWithChildren) {
       size: cartItem.size,
     }));
 
-    insertOrderItems(
-      orderItems,
-      {
-        onSuccess: () => {
-          clearCart();
-          router.push(`/(user)/orders/${orderData.id}`);
-        },
-      }
-    );
+    insertOrderItems(orderItems, {
+      onSuccess: () => {
+        clearCart();
+        router.push(`/(user)/orders/${orderData.id}`);
+      },
+    });
   }
 
   const total = items.reduce(

@@ -6,7 +6,7 @@ export const useInsertOrderListener = () => {
     const queryClient = useQueryClient();
     
     useEffect(() => {
-        const orderSunscription = supabase
+        const orderSubscription = supabase
           .channel("custom-insert-channel")
           .on(
             "postgres_changes",
@@ -18,7 +18,7 @@ export const useInsertOrderListener = () => {
           .subscribe();
     
           return () => {
-            orderSunscription.unsubscribe();
+            orderSubscription.unsubscribe();
           };
       }, []);
 }

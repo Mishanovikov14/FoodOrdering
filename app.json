@@ -19,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.mykhailonovikov.FoodOrdering"
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +34,12 @@
     "experiments": {
       "typedRoutes": true
     },
-    "sdkVersion": "51.0.0"
+    "sdkVersion": "51.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "b1110491-3167-45a4-a1da-1f8a95f149bd"
+      }
+    }
   },
   "name": "foodordering"
 }

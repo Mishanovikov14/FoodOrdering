@@ -4,9 +4,7 @@ import {
   Text,
   TextInput,
   View,
-  Image,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { defaultPizzaImage } from "@/constants/constants";

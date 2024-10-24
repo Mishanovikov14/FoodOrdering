@@ -5,6 +5,7 @@ import OrderListItem from "@/components/OrderListItem";
 import Loader from "@/components/ui/Loader";
 import { Stack } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Text, FlatList, View, StyleSheet } from "react-native";
 
 export default function OrderDetailsScreen() {
@@ -12,6 +13,7 @@ export default function OrderDetailsScreen() {
   const id = parseFloat(typeof idString === "string" ? idString : idString[0]);
 
   const {data: order, error, isLoading} = useOrderDetails(id);
+  const {t} = useTranslation();
 
   useUpdateOrderListener(id);
 
@@ -29,13 +31,13 @@ export default function OrderDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: `Order #${id}` }} />
+      <Stack.Screen options={{ title: `${t("order")} #${id}` }} />
       <OrderListItem order={order} />
 
       <FlatList
         data={order.order_items}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => item ? <Text>Item not found</Text> : <OrderItemListItem item={item} />}
+        renderItem={({ item }) => <OrderItemListItem item={item} />}
         contentContainerStyle={{ gap: 10 }}
       />
     </View>

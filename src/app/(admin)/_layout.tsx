@@ -5,6 +5,7 @@ import { Redirect, Tabs } from "expo-router";
 import Colors from "../../constants/Colors";
 import { useClientOnlyValue } from "../../components/useClientOnlyValue";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTranslation } from "react-i18next";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -15,9 +16,10 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const { isAdmin } = useAuth();
+  const { profile } = useAuth();
+  const {t} = useTranslation();
 
-  if (!isAdmin) {
+  if (profile?.group !== "ADMIN") {
     return <Redirect href={"/"} />;
   }
 
@@ -37,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="menu"
         options={{
-          title: "Menu",
+          title: t("menu"),
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="cutlery" color={color} />
@@ -47,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="orders"
         options={{
-          title: "Orders",
+          title: t("orders"),
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
         }}

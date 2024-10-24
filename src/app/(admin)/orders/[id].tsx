@@ -5,6 +5,7 @@ import { Text } from "@/components/Themed";
 import Loader from "@/components/ui/Loader";
 import Colors from "@/constants/Colors";
 import { OrderStatusList } from "@/constants/types";
+import { notifyUserAboutOrderUpdate } from "@/lib/notifications";
 import { Stack } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
 import { FlatList, View, StyleSheet, Pressable } from "react-native";
@@ -13,13 +14,10 @@ export default function OrderDetailsScreen() {
   const { id: idString } = useLocalSearchParams();
   const id = parseFloat(typeof idString === "string" ? idString : idString[0]);
 
-  const {data: order, error, isLoading} = useOrderDetails(id);
+  const { data: order, error, isLoading } = useOrderDetails(id);
 
-  const {mutate: updateOrder, isPending: isCurrentlyUpdating} = useUpdateOrder();
-
-  function statusUpdateHandler(status: string) {
-    updateOrder({id: id, updatedFields: {status}});
-  } 
+  const { mutate: updateOrder, isPending: isCurrentlyUpdating } =
+    useUpdateOrder();
 
   if (isLoading || isCurrentlyUpdating) {
     return <Loader />;
@@ -27,6 +25,14 @@ export default function OrderDetailsScreen() {
 
   if (error || !order) {
     return <Text>Failed to fetch</Text>;
+  }
+
+  async function statusUpdateHandler(status: string) {
+    await updateOrder({ id: id, updatedFields: { status } });
+
+    if (order) {
+      notifyUserAboutOrderUpdate({ ...order, status });
+    }
   }
 
   return (
@@ -47,10 +53,18 @@ export default function OrderDetailsScreen() {
                 <Pressable
                   key={status}
                   onPress={() => statusUpdateHandler(status)}
-                  style={[styles.status,  order.status === status && {backgroundColor: Colors.light.tint}]}
+                  style={[
+                    styles.status,
+                    order.status === status && {
+                      backgroundColor: Colors.light.tint,
+                    },
+                  ]}
                 >
                   <Text
-                    style={[styles.statusText, order.status === status && {color: "white"}]}
+                    style={[
+                      styles.statusText,
+                      order.status === status && { color: "white" },
+                    ]}
                   >
                     {status}
                   </Text>
@@ -79,10 +93,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginVertical: 10,
-    backgroundColor: "transparent"
+    backgroundColor: "transparent",
   },
 
   statusText: {
-    color: Colors.light.tint
-  }
+    color: Colors.light.tint,
+  },
 });

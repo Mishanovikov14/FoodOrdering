@@ -13,14 +13,12 @@ type AuthData = {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  isAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthData>({
   session: null,
   profile: null,
-  loading: true,
-  isAdmin: false
+  loading: true
 });
 
 export default function AuthProvider({ children }: PropsWithChildren) {
@@ -38,7 +36,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       setSession(session);
 
       if (session) {
-        // fetch profile
         const { data } = await supabase
           .from("profiles")
           .select("*")
@@ -59,7 +56,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, isAdmin: profile?.group === "ADMIN" }}>
+    <AuthContext.Provider value={{ session, profile, loading }}>
       {children}
     </AuthContext.Provider>
   );

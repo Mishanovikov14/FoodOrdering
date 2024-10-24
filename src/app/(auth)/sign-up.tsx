@@ -14,6 +14,7 @@ const SignUpScreen = () => {
 
   async function signUpWithEmail() {
     setLoading(true);
+
     const {error} = await supabase.auth.signUp({
         email,
         password
@@ -36,6 +37,7 @@ const SignUpScreen = () => {
         onChangeText={setEmail}
         placeholder="jon@gmail.com"
         style={styles.input}
+        testID="input"
       />
 
       <Text style={styles.label}>Password</Text>
@@ -45,6 +47,7 @@ const SignUpScreen = () => {
         placeholder=""
         style={styles.input}
         secureTextEntry
+        testID="input"
       />
 
       <Button onPress={signUpWithEmail} disabled={loading} text={loading ? "Creating account..." : "Create account"} />

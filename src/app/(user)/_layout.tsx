@@ -6,6 +6,7 @@ import Colors from "../../constants/Colors";
 import { useColorScheme } from "../../components/useColorScheme";
 import { useClientOnlyValue } from "../../components/useClientOnlyValue";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTranslation } from "react-i18next";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -18,6 +19,7 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { session } = useAuth();
+  const {t} = useTranslation();
 
   if (!session) {
     return <Redirect href={"/"} />;
@@ -37,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="menu"
         options={{
-          title: "Menu",
+          title: t("menu"),
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="cutlery" color={color} />
@@ -47,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="orders"
         options={{
-          title: "Orders",
+          title: t("orders"),
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
         }}
@@ -55,7 +57,7 @@ export default function TabLayout() {
        <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("profile"),
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />

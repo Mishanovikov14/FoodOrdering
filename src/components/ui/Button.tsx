@@ -9,7 +9,7 @@ type ButtonProps = {
 const Button = forwardRef<View | null, ButtonProps>(
   ({ text, ...pressableProps }, ref) => {
     return (
-      <Pressable ref={ref} {...pressableProps} style={styles.container}>
+      <Pressable ref={ref} role='button' {...pressableProps} style={styles.container}>
         <Text style={styles.text}>{text}</Text>
       </Pressable>
     );
@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 100,
     marginVertical: 10,
+    marginHorizontal: 10
   },
   
   text: {
